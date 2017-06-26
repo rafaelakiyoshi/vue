@@ -6,7 +6,7 @@ services:
   - docker
 
 before_install:
-  - docker run --rm -ti -v $PWD:/srv -w /srv rflavien/vue-cli
+  - docker-compose up
   
 script:
   - npm run dev
