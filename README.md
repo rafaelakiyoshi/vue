@@ -47,7 +47,7 @@ export default {
 ```
 Sumarizando, você está tornando exportável um componente chamado app, no qual possui um dado 'msg'. Se você mudar o conteúdo dessa variável, sem precisar recompilar ou até mesmo de um F5, a página mudará automaticamente para o novo conteúdo, pois o servidor vue possui livereload!
 
-# 3-Consumindo uma API
+# 3-Consumindo uma API de Tarefas.
 Para realizar requisições, é necessário a instalação de um módulo chamado vue-resource
 ```bash
 $ npm install vue-resource --save
@@ -66,3 +66,93 @@ new Vue({
   render: h => h(App)
 })
 ```
+
+Pronto, agora com o vue-resource você conseguirá realizar requisições http. Vamos no **App.vue** e criaremos nossas variáveis, que serão populadas mais tarde. Lembre-se que quem cuida diso é a função **data() **.
+
+```javascript
+export default {
+  name: 'app',
+  data () {
+    return {
+      title: 'Welcome to your Activities!!!',
+      items: [],
+      fields: {}
+  }
+})
+```
+Pronto. Agora temos um Array de itens e um Objeto de campos. O objeto de campos, preencheremos na mão, pois trata-se dos títulos da tabela que iremos montar. Ela será montada baseada tanto nos itens que retornarão pela API quanto pela biblioteca que utilizaremos: **Bootstrap-Vue** E ficará mais ou menos assim:
+```javascript
+fields: {
+        userId: {
+          label: 'Id do Usuario',
+          sortable: true
+        },
+        id: {
+          label: 'Id da Tarefa',
+          sortable: true
+        },
+        title: {
+          label: 'Titulo',
+          sortable: false
+        },
+        completed: {
+          label: 'Tarefa Completada?',
+          sortable: false
+        }
+      },
+      currentPage: 1,
+      perPage: 5,
+      filter: null
+    }
+})
+```
+Agora vem a parte legal. Devemos exibir o Array Items em uma tabela (quem cuidará disso para nós será o Bootstrap-vue). Porém, este array está vazio. Como preencherei ele antes da página ser exibida: **Com os chamados Lifecycles Hooks**
+Por exemplo, o método **created()** é realizado assim que o componente é criado, e é nele que iremos implementar o método de requisição. Ficará mais ou menos assim:
+```javascript
+  created() {
+    let promisse = this.$http.get('https://jsonplaceholder.typicode.com/todos');
+    promisse
+    .then(res => res.json())
+    .then(items => this.items = items)
+    console.log(this.items)
+  }
+})
+```
+Lembre-se que **created()** é uma função de mesmo nível que **data()**
+
+Agora Basta colocar o **HTML** para exibir os Items! veja [AQUI](https://bootstrap-vue.github.io/docs/components/table) como. fazê-lo.
+
+# 3-Dockerizando
+Já existe uma [Imagem](https://hub.docker.com/r/ebiven/vue-cli/) do Vue-Cli no DockerHub, e é com ela que iremos trabalhar.
+Crie uma receita docker-compose.yml e adicione o seguinte:
+```yml
+version: '2'
+services:
+  web:
+    image: ebiven/vue-cli
+    command: npm run dev
+    volumes:
+      - .:/code
+    ports:
+      - "8080:8080"
+
+```
+Agora basta digitar **docker-compose up** no diretório do arquivo. Lembre-se de criar o yml na raíz do seu projeto Vue.
+
+# 4-CI com Travis
+Uma vez dockerizado, você deve apenas colocar o seu container em execução no travis para que ele possa testá-lo. Uma configuração básica do Travis para este projeto seria o seguinte: crie um arquivo chamado **.travis.yml** Também na raiz do projeto, com o seguinte:
+```yml
+sudo: required
+
+language: node_js
+
+services:
+  - docker
+
+script:
+  - docker-compose up
+
+```
+Repare que o sudo é necessário para levantar o container. Dentro da sua receita docker-compose já existe o script de inicialização do vue "npm run dev" então o proprio compose up é o script do travis.
+
+Claro, essa é a versão básica do Travis, há outras possibilidades, como rodar os testes, rodar análise estática etc.
