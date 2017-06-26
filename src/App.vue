@@ -1,27 +1,33 @@
 <template>
   <div id="app">
     <h1>{{ title }}</h1>
-    <div class="scrolltable">
-      <table class="header">
-        <thead>
-          <tr>
-            <th v-for="column in columns">
-              {{column}}
-            </th>
-          </tr>
-        </thead>
-      </table>
-      <div class="body">
-        <table>
-          <tbody>
-            <tr v-for="rowIndex in indexSize">
-              <td v-for="(column, columnIndex) in columns">
-                {{todos[rowIndex-1][column]}}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+
+    <div class="justify-content-centermy-1 row">
+      <b-form-fieldset horizontal label="Rows per page" class="col-6" :label-size="6">
+        <b-form-select :options="[{text:5,value:5},{text:10,value:10},{text:15,value:15}]" v-model="perPage">
+        </b-form-select>
+      </b-form-fieldset>
+
+      <b-form-fieldset horizontal label="Filter" class="col-6" :label-size="2">
+        <b-form-input v-model="filter" placeholder="Type to Search"></b-form-input>
+      </b-form-fieldset>
+    </div>
+
+    <!-- Main table element -->
+    <b-table striped hover :items="items" :fields="fields" :current-page="currentPage" :per-page="perPage" :filter="filter">
+      <template slot="name" scope="item">
+        {{item.value.first}} {{item.value.last}}
+      </template>
+      <template slot="isActive" scope="item">
+        {{item.value?'Yes :)':'No :('}}
+      </template>
+      <template slot="actions" scope="item">
+        <b-btn size="sm" @click="details(item.item)">Details</b-btn>
+      </template>
+    </b-table>
+
+    <div class="justify-content-center row my-1">
+      <b-pagination size="md" :total-rows="this.items.length" :per-page="perPage" v-model="currentPage" />
     </div>
   </div>
 </template>
@@ -32,25 +38,40 @@ export default {
   data () {
     return {
       title: 'Welcome to your Activities!!!',
-      todos: [],
-      columns: [
-        'userId',
-        'id',
-        'title',
-        'completed'
-      ]
+      items: [],
+      fields: {
+        userId: {
+          label: 'Id do Usuario',
+          sortable: true
+        },
+        id: {
+          label: 'Id da Tarefa',
+          sortable: true
+        },
+        title: {
+          label: 'Titulo',
+          sortable: false
+        },
+        completed: {
+          label: 'Tarefa Completada?',
+          sortable: false
+        }
+      },
+      currentPage: 1,
+      perPage: 5,
+      filter: null
     }
   },
   created() {
     let promisse = this.$http.get('https://jsonplaceholder.typicode.com/todos');
     promisse
     .then(res => res.json())
-    .then(todos => this.todos = todos)
-    console.log(this.todos)
+    .then(items => this.items = items)
+    console.log(this.items)
   },
   computed: {
     indexSize () {
-      return this.todos.length
+      return this.items.length
     }
   }
 }
@@ -65,26 +86,18 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
+
+table, td, th {
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
 table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
+    border-collapse: collapse;
+    width: 100%;
 }
 
-
-th {
-  min-width: 200px;
-  font-size: 20px;
+th, td {
+    padding: 15px;
 }
-td {
-  min-width: 360px;
-  font-size: 15px;
-}
-tr:nth-child(even){background-color: #f2f2f2}
-
-th {
-  background-color: #4CAF50;
-  color: white;
-}
-/* an outside constraint to react against */
 </style>
