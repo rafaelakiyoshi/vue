@@ -31,7 +31,7 @@ export default {
   name: 'app',
   data () {
     return {
-      title: 'Welcome to your Activities!',
+      title: 'Welcome to your Activities!!!',
       todos: [],
       columns: [
         'userId',
